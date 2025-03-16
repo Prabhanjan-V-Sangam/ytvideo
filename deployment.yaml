@@ -1,0 +1,20 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flask-video-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: flask-video
+  template:
+    metadata:
+      labels:
+        app: flask-video
+    spec:
+      containers:
+        - name: flask-video
+          image: flask-video-app:latest
+          imagePullPolicy: IfNotPresent # <-- Ensure this line is added
+          ports:
+            - containerPort: 5000
