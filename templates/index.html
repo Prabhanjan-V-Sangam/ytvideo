@@ -3,19 +3,22 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Video List</title>
+    <title>Video Streaming</title>
   </head>
   <body>
     <h1>Available Videos</h1>
     <ul>
       {% for video in video_files %}
       <li>
-        <a href="{{ nginx_url }}/{{ video }}">{{ video }}</a>
-        <br />
-        <video width="720" controls>
-          <source src="{{ nginx_url }}/{{ video }}" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
+        <a href="{{ url_for('watch', video_name=video) }}">
+          <img
+            src="https://img.youtube.com/vi/{{ loop.index }}/hqdefault.jpg"
+            alt="{{ video }}"
+            width="200"
+          />
+          <br />
+          {{ video }}
+        </a>
       </li>
       {% endfor %}
     </ul>

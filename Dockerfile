@@ -1,17 +1,27 @@
-# Use an official Python image
-FROM python:3.10
+# Use the official Nginx image
+FROM nginx:alpine
 
-# Set working directory inside container
+# Install Python, virtualenv, and dependencies
+RUN apk add --no-cache python3 py3-pip py3-virtualenv
+
+# Set the working directory
 WORKDIR /app
 
-# Copy all files to container
-COPY . .
+# Copy application files
+COPY app.py /app/app.py
+COPY templates /app/templates
+COPY requirements.txt /app/requirements.txt
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# Create a virtual environment and install dependencies inside it
+RUN python3 -m venv /app/venv && \
+    . /app/venv/bin/activate && \
+    pip install --no-cache-dir -r /app/requirements.txt
 
-# Expose Flask port
-EXPOSE 5000
+# Copy the Nginx configuration file
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Run Flask with Gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+# Expose Flask (5000) and Nginx (8081) ports
+EXPOSE 5000 8081
+
+# Start both Flask and Nginx
+CMD ["sh", "-c", "nginx && . /app/venv/bin/activate && python /app/app.py"]
