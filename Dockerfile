@@ -1,17 +1,11 @@
-# Use an official Python image
-FROM python:3.10
+FROM nginx:alpine
 
-# Set working directory inside container
-WORKDIR /app
+# Copy main Nginx configuration
+COPY nginx.conf /etc/nginx/nginx.conf
 
-# Copy all files to container
-COPY . .
+# Copy server configuration
+COPY default.conf /etc/nginx/conf.d/default.conf
 
-# Install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+EXPOSE 8080
 
-# Expose Flask port
-EXPOSE 5000
-
-# Run Flask with Gunicorn
-CMD ["gunicorn", "-b", "0.0.0.0:5000", "app:app"]
+CMD ["nginx", "-g", "daemon off;"]
