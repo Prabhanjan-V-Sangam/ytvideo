@@ -20,6 +20,9 @@ RUN python3 -m venv /app/venv && \
 # Copy the Nginx configuration file
 COPY nginx.conf /etc/nginx/nginx.conf
 
+# Create cache folder for Nginx and set permissions
+RUN mkdir -p /var/cache/nginx/video_cache && chmod -R 777 /var/cache/nginx/video_cache
+
 # Expose Flask (5000) and Nginx (8081) ports
 EXPOSE 5000 8081
 

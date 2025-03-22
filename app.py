@@ -1,14 +1,19 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template
 import requests
 from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
-NGINX_URL = "http://192.168.1.8:8081/videos/"  # Load videos via Nginx reverse proxy cache
+NGINX_URL = "http://localhost:8081/videos/"  # Load videos via Nginx reverse proxy cache
 
 @app.route("/")
 def index():
-    response = requests.get("http://192.168.1.8:8080/")  # Fetch from original server
+    try:
+        response = requests.get(NGINX_URL)  # Fetch directory listing from Nginx
+        response.raise_for_status()
+    except requests.RequestException as e:
+        return f"Error fetching videos: {e}", 500
+
     soup = BeautifulSoup(response.text, "html.parser")
 
     # Extract video links
