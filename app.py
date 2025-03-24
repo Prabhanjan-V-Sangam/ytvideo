@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 
 app = Flask(__name__)
 
-NGINX_URL = "http://192.168.1.8:8080"
+NGINX_URL = "http://host.docker.internal:8080"
 
 @app.route("/")
 def index():
