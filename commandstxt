@@ -1,0 +1,1 @@
+docker run -d --name nginx-video-server -p 8080:80 -v I:\ytvideos:/usr/share/nginx/html:ro -v C:\Users\hp\Desktop\cloud\idkporj\videoyt\nginx.conf:/etc/nginx/conf.d/default.conf nginx
