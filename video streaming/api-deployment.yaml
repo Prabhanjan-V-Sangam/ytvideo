@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: master-api-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: master-api
+  template:
+    metadata:
+      labels:
+        app: master-api
+    spec:
+      containers:
+        - name: master-api
+          image: my-master-api:latest
+          ImagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 5000
+          env:
+            - name: REDIS_HOST
+              value: "redis-service"
+            - name: REDIS_PORT
+              value: "6379"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: master-api-service
+spec:
+  selector:
+    app: master-api
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
