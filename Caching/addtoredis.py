@@ -19,7 +19,7 @@ def store_video_in_redis(video_name):
     password="user",    # Add password
     decode_responses=False  # Set to False for binary data
 )
-    url = f"http://localhost:8080/what%20if%20you%20weren%27t%20afraid_.mp4"
+    url = f""
     
     response = requests.get(url, stream=True)
     if response.status_code != 200:

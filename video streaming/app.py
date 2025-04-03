@@ -1,3 +1,41 @@
+import redis
+import requests
+
+CHUNK_SIZE = 1024 * 1024  # 1MB per chunk
+REDIS_HOST = "localhost"
+REDIS_PORT = 6379
+
+# Redis client
+redis_client = redis.StrictRedis(
+    host=REDIS_HOST,
+    port=REDIS_PORT,
+    db=0,
+    username="default",  # Add username
+    password="user",  # Add password
+    decode_responses=False  # Set to False for binary data
+)
+
+def store_video_in_redis(video_name, video_url):
+    # Fetch the video from the provided URL
+    response = requests.get(video_url, stream=True)
+    if response.status_code != 200:
+        print(f"Failed to download {video_name}")
+        return
+
+    chunk_index = 0
+    for chunk in response.iter_content(CHUNK_SIZE):
+        redis_client.set(f"{video_name}:chunk:{chunk_index}", chunk)
+        chunk_index += 1
+
+    redis_client.set(f"{video_name}:total_chunks", chunk_index)
+    print(f"Stored {video_name} in Redis ({chunk_index} chunks)")
+
+# This will be called when we want to store a video in Redis
+def store_video(video_name, video_url):
+    store_video_in_redis(video_name, video_url)
+
+
+'''
 from flask import Flask, render_template, redirect, url_for
 import requests
 from bs4 import BeautifulSoup
@@ -50,3 +88,4 @@ def cache_video(video_name):
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)
+'''
