@@ -1,41 +1,63 @@
-from flask import Flask, Response, render_template, send_file
+from flask import Flask, Response, render_template, request
 import redis
+import urllib.parse
 
 app = Flask(__name__)
-r = redis.Redis(host='localhost', port=6379, decode_responses=False)
 
-VIDEO_NAME = "Mike_Mentzer_Bodybuilding_Edit_4_.mp4"
+# Redis setup
+redis_client = redis.StrictRedis(
+    host="192.168.1.8",
+    port=6379,
+    db=0,
+    username="default",
+    password="user",
+    decode_responses=False  # Binary mode for video chunks
+)
+
+
+'''
+# Util: get original name from metadata
+def get_original_name(slug_name):
+    meta_key = f"video:{slug_name}:meta"
+    original = redis_client.hget(meta_key, "original_name")
+    if original:
+        return original.decode()
+    return slug_name
 
 @app.route("/")
-def index():
-    return render_template("corn.html")
+def list_videos():
+    keys = redis_client.keys("video:*:chunks")
+    videos = []
 
-@app.route("/playlist.m3u8")
-def playlist():
-    meta_key = f"video:{VIDEO_NAME}:meta"
-    total_chunks = int(r.hget(meta_key, "total_chunks"))
-    
-    lines = [
-        "#EXTM3U",
-        "#EXT-X-VERSION:3",
-        "#EXT-X-TARGETDURATION:10",
-        "#EXT-X-MEDIA-SEQUENCE:0"
-    ]
-    
-    for i in range(total_chunks):
-        lines.append("#EXTINF:10.0,")
-        lines.append(f"/chunk/{i}.ts")
-    
-    lines.append("#EXT-X-ENDLIST")
-    
-    return Response("\n".join(lines), mimetype="application/vnd.apple.mpegurl")
+    for key in keys:
+        slug = key.decode().split("video:")[1].rsplit(":chunks", 1)[0]
+        original_name = get_original_name(slug)
+        videos.append({"slug": slug, "original": original_name})
 
-@app.route("/chunk/<int:index>.ts")
-def chunk(index):
-    key = f"video:{VIDEO_NAME}:chunks"
-    chunk_data = r.hget(key, str(index))
-    if chunk_data:
-        return Response(chunk_data, mimetype="video/MP2T")
-    return "Chunk not found", 404
+    return render_template("videos.html", videos=videos)
+
+@app.route("/watch/<video_slug>")
+def watch(video_slug):
+    original_name = get_original_name(video_slug)
+    return render_template("watch.html", video_name=video_slug, display_name=original_name)
+
+@app.route("/stream/<video_slug>")
+def stream(video_slug):
+    chunk_hash = f"video:{video_slug}:chunks"
+
+    # Get sorted chunk indices
+    chunk_indices = sorted(
+        [int(k.decode()) for k in redis_client.hkeys(chunk_hash)]
+    )
+
+    def generate():
+        for index in chunk_indices:
+            chunk = redis_client.hget(chunk_hash, str(index))
+            if chunk:
+                yield chunk
+
+    return Response(generate(), mimetype="video/mp4")
+
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5050, debug=True)
+'''
