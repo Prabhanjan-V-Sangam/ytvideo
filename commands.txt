@@ -2,3 +2,19 @@ docker run -d --name nginx-video-server -p 8080:80 `
     -v I:\ytvideos:/usr/share/nginx/html:ro `
     -v C:\Users\hp\Desktop\cloud\idkporj\videoyt\nginx.conf:/etc/nginx/conf.d/default.conf `
     nginx
+
+docker run -p 5000:5000 `
+  -v "$(pwd)":/app `
+  flask-hls-app
+
+docker run --rm -it `
+  --privileged `
+  -v /dev:/dev `
+  -v /lib/modules:/lib/modules `
+  lfedge/eve bash
+
+
+  docker run -p 5000:5000 `
+>>   -v ${PWD}:/app `
+>>   flask-hls-app:latest
+docker build -t flask-hls-app4:latest .
