@@ -8,7 +8,7 @@ RUN apk add --no-cache python3 py3-pip py3-virtualenv
 WORKDIR /app
 
 # Copy application files
-COPY app.py redispython.py /app/
+COPY app.py redispython.py try2.py /app/
 #COPY app.py /app/app.py
 COPY templates /app/templates
 COPY requirements.txt /app/requirements.txt
@@ -29,4 +29,6 @@ EXPOSE 5000 8081
 
 # Start both Flask and Nginx
 #CMD ["sh", "-c", "nginx && . /app/venv/bin/activate && python /app/app.py & /app/pythonlogwatcher.py"]
-CMD ["sh", "-c", "/app/venv/bin/python /app/app.py & /app/venv/bin/python /app/redispython.py & nginx -g 'daemon off;'"]
+CMD ["sh", "-c", "/app/venv/bin/python /app/app.py & nginx -g 'daemon off;'"]
+
+# /app/venv/bin/python /app/redispython.py &

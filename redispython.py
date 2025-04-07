@@ -1,67 +1,57 @@
 import redis
-import os
-import subprocess
 import requests
+import urllib
+import re
 
-REDIS_HOST = os.environ.get("REDIS_HOST", "localhost")
-REDIS_PORT = int(os.environ.get("REDIS_PORT", 6379))
-REDIS_PASSWORD = os.environ.get("REDIS_PASSWORD","user")
+# Constants
+NGINX_URL = "http://192.168.1.8:8081/videos/"
+CHUNK_SIZE = 1024 * 1024  # 1MB
 
-redis_client = redis.Redis(
-    host=REDIS_HOST,
-    port=REDIS_PORT,
-    password=REDIS_PASSWORD
+# Redis client setup
+redis_client = redis.StrictRedis(
+    host="192.168.1.8",  # Your Redis server address
+    port=6379,
+    db=0,
+    username="default",
+    password="user",
+    decode_responses=False  # Binary chunks
 )
 
-NGINX_VIDEO_URL = "http://192.168.1.8:8081/videos/"
+def slugify(name):
+    base, ext = name.rsplit(".", 1)
+    base = re.sub(r'\W+', '_', base)
+    return f"{base}.{ext}"
 
 def store_video_in_redis(video_name):
-    video_url = f"{NGINX_VIDEO_URL}{video_name}"
-    video_file = f"/tmp/{video_name}"
-    folder_name = f"/tmp/hls_{video_name}"
-    playlist_path = os.path.join(folder_name, "playlist.m3u8")
+    safe_video_name = urllib.parse.unquote(video_name)
+    clean_name = slugify(safe_video_name)  # Sanitized version for Redis key
 
-    # Skip if already processed
-    if redis_client.get(f"video:{video_name}:playlist"):
-        print(f"[i] Video {video_name} already in Redis.")
-        return
+    url = f"{NGINX_URL}{safe_video_name}"
 
     try:
-        # Download the video file
-        print(f"[*] Downloading: {video_url}")
-        r = requests.get(video_url, stream=True)
-        with open(video_file, "wb") as f:
-            for chunk in r.iter_content(chunk_size=1024 * 1024):
-                if chunk:
-                    f.write(chunk)
+        response = requests.get(url, stream=True)
+        if response.status_code != 200:
+            print(f"[!] Failed to fetch video: {url}")
+            return
 
-        # Convert to HLS
-        print("[*] Converting to HLS...")
-        os.makedirs(folder_name, exist_ok=True)
-        subprocess.run([
-            "ffmpeg", "-i", video_file,
-            "-c:v", "libx264", "-c:a", "aac",
-            "-f", "hls", "-hls_time", "10", "-hls_list_size", "0",
-            "-hls_segment_filename", f"{folder_name}/chunk_%03d.ts",
-            playlist_path
-        ], check=True)
+        chunk_index = 0
+        chunk_hash_key = f"video:{clean_name}:chunks"
 
-        # Store in Redis
-        print("[*] Storing in Redis...")
-        chunk_key = f"video:{video_name}:chunks"
-        playlist_key = f"video:{video_name}:playlist"
+        for chunk in response.iter_content(CHUNK_SIZE):
+            if chunk:
+                redis_client.hset(chunk_hash_key, str(chunk_index), chunk)
+                print(f"[+] Stored chunk {chunk_index} in hash {chunk_hash_key}")
+                chunk_index += 1
 
-        chunks = sorted(f for f in os.listdir(folder_name) if f.endswith(".ts"))
-        for i, chunk in enumerate(chunks):
-            with open(os.path.join(folder_name, chunk), 'rb') as f:
-                redis_client.hset(chunk_key, str(i), f.read())
-        with open(playlist_path, "r") as f:
-            redis_client.set(playlist_key, f.read())
+        # Metadata for total chunk count and original name
+        meta_key = f"video:{clean_name}:meta"
+        redis_client.hset(meta_key, mapping={
+            "total_chunks": chunk_index,
+            "original_name": safe_video_name,  # Original name stored for display
+            "end_marker": "true"  # End marker indicating the video is complete
+        })
 
-        print(f"[✓] Stored {len(chunks)} chunks and playlist for {video_name}.")
-
-        # Cleanup
-        os.remove(video_file)
+        print(f"[✓] Stored {safe_video_name} as {clean_name} ({chunk_index} chunks)")
 
     except Exception as e:
-        print(f"[x] Failed to process {video_name}: {e}")
+        print(f"[!] Error while fetching {safe_video_name}: {e}")

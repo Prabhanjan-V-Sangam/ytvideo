@@ -1,13 +1,11 @@
-from flask import Flask, render_template
+# app.py
+from flask import Flask, render_template, request
 import requests
 from bs4 import BeautifulSoup
-from redispython import store_video_in_redis  # <-- Correct import
-
-import threading  # For optional async push
+from try2 import stream_video  # ✅ This is the key import
 
 app = Flask(__name__)
-
-NGINX_URL = "http://192.168.1.8:8081/videos/"  # Load videos via NGINX
+NGINX_URL = "http://192.168.1.8:8081/videos/"
 
 @app.route("/")
 def index():
@@ -18,8 +16,6 @@ def index():
         return f"Error fetching videos: {e}", 500
 
     soup = BeautifulSoup(response.text, "html.parser")
-
-    # Extract video links
     video_files = [
         link.get("href")
         for link in soup.find_all("a")
@@ -30,10 +26,7 @@ def index():
 
 @app.route("/watch/<video_name>")
 def watch(video_name):
-    # Trigger Redis chunking in background
-    threading.Thread(target=store_video_in_redis, args=(video_name,)).start()
-
-    return render_template("watch.html", video_url=f"{NGINX_URL}{video_name}")
+    return stream_video(video_name)  # ✅ Must return response or template
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
