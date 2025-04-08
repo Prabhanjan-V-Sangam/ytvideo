@@ -4,12 +4,12 @@ import urllib
 import re
 
 # Constants
-NGINX_URL = "http://192.168.1.8:8081/videos/"
+NGINX_URL = "http://host.docker.internal:8081/videos/"
 CHUNK_SIZE = 1024 * 1024  # 1MB
 
 # Redis client setup
 redis_client = redis.StrictRedis(
-    host="192.168.1.8",  # Your Redis server address
+    host="host.docker.internal",  # Your Redis server address
     port=6379,
     db=0,
     username="default",
