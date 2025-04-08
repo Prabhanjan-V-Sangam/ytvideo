@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: utube
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: utube
+  template:
+    metadata:
+      labels:
+        app: utube
+    spec:
+      imagePullSecrets:
+        - name: my-registry-secret # Add this line to reference the secret
+      containers:
+        - name: nginx-cache-app
+          image: nginx-cache-app:latest
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+            - containerPort: 8081
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: utube-service
+spec:
+  selector:
+    app: utube
+  ports:
+    - name: port-5000 # Adding name to the first port
+      protocol: TCP
+      port: 5000 # Expose port 5000 internally
+      targetPort: 5000 # Forward to port 5000 in the container
+    - name: port-8081 # Adding name to the second port
+      protocol: TCP
+      port: 8081 # Expose port 8081 internally
+      targetPort: 8081 # Forward to port 8081 in the container
+  type: NodePort
+  externalTrafficPolicy: Local

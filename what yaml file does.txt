@@ -1,0 +1,6 @@
+redis-service.yml:You need to ensure that Redis is exposed as a Kubernetes Service so that your app pod can communicate with it.
+app-deployment.yml: deploy app
+redis-deployment: configured with configmap redis
+2.redisdeploywithlink : u know what it is
+reid configmap : config map
+service.yml: expose app

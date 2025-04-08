@@ -18,3 +18,18 @@ docker run --rm -it `
 >>   -v ${PWD}:/app `
 >>   flask-hls-app:latest
 docker build -t flask-hls-app4:latest .
+
+
+docker run -d `
+  --name redis-cache `
+  -p 6379:6379 `
+  -v "${PWD}\redis.conf:/usr/local/etc/redis/redis.conf" `
+  redis:latest `
+  redis-server /usr/local/etc/redis/redis.conf
+
+
+kubectl create secret docker-registry my-registry-secret \
+  --docker-server=docker.io \
+  --docker-username=myusername \
+  --docker-password=mypassword \
+  --docker-email=myemail@example.com
