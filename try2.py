@@ -6,7 +6,7 @@ from flask import Response, render_template
 import threading
 from redispython import store_video_in_redis
 
-NGINX_URL = "http://host.docker.internal:8081/videos/"
+NGINX_URL = "http://localhost:8081/videos/"
 
 redis_client = redis.StrictRedis(
     host="host.docker.internal",

@@ -4,7 +4,7 @@ import urllib
 import re
 
 # Constants
-NGINX_URL = "http://host.docker.internal:8081/videos/"
+NGINX_URL = "http://localhost:8081/videos/"
 CHUNK_SIZE = 1024 * 1024  # 1MB
 
 # Redis client setup

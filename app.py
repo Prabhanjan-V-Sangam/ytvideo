@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from try2 import stream_video  # ✅ This is the key import
 
 app = Flask(__name__)
-NGINX_URL = "http://host.docker.internal:8081/videos/"
+NGINX_URL = "http://localhost:8081/videos/"
 
 @app.route("/")
 def index():
