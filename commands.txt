@@ -27,6 +27,11 @@ docker run -d `
   redis:latest `
   redis-server /usr/local/etc/redis/redis.conf
 
+kubectl create secret docker-registry my-registry-secret `
+  --docker-server=docker.io `
+  --docker-username=myusername `
+  --docker-password=mypassword `
+  --docker-email=myemail@example.com
 
 kubectl create secret docker-registry my-registry-secret \
   --docker-server=docker.io \
