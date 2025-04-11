@@ -9,7 +9,7 @@ from redispython import store_video_in_redis
 NGINX_URL = "http://localhost:8081/videos/"
 
 redis_client = redis.StrictRedis(
-    host="redis-service",
+    host="host.docker.internal",
     port=6379,
     db=0,
     username="default",
